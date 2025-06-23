@@ -49,22 +49,25 @@ public class Scene2 extends JPanel {
     private HashMap<Integer, SpawnDetails> spawnMap = new HashMap<>();
     protected int frame = 0;
 
-    // Audio players for sound effects
+    // Audio players for sound effects and background music
     private AudioPlayer shootSoundPlayer;
     private AudioPlayer explosionSoundPlayer;
+    private AudioPlayer backgroundMusicPlayer;
 
     public Scene2(Game game) {
         this.game = game;
 
-        // More complex spawn pattern for Scene2
-        spawnMap.put(60, new SpawnDetails("Enemy", 50, 0));
-        spawnMap.put(120, new SpawnDetails("ZigZag", 100, 0));
-        spawnMap.put(180, new SpawnDetails("Enemy", 150, 0));
-        spawnMap.put(240, new SpawnDetails("ZigZag", 200, 0));
-        spawnMap.put(300, new SpawnDetails("Enemy", 250, 0));
-        spawnMap.put(360, new SpawnDetails("ZigZag", 300, 0));
-        spawnMap.put(420, new SpawnDetails("Enemy", 350, 0));
-        spawnMap.put(480, new SpawnDetails("ZigZag", 400, 0));
+        // Better spaced spawn pattern for Scene2
+        spawnMap.put(60, new SpawnDetails("Enemy", 100, 0));
+        spawnMap.put(120, new SpawnDetails("ZigZag", 200, 0));
+        spawnMap.put(180, new SpawnDetails("Enemy", 300, 0));
+        spawnMap.put(240, new SpawnDetails("ZigZag", 400, 0));
+        spawnMap.put(300, new SpawnDetails("Enemy", 150, 0));
+        spawnMap.put(360, new SpawnDetails("ZigZag", 350, 0));
+        spawnMap.put(420, new SpawnDetails("Enemy", 250, 0));
+        spawnMap.put(480, new SpawnDetails("ZigZag", 450, 0));
+        spawnMap.put(540, new SpawnDetails("Enemy", 50, 0));
+        spawnMap.put(600, new SpawnDetails("ZigZag", 500, 0));
     }
 
     public void start() {
@@ -85,6 +88,9 @@ public class Scene2 extends JPanel {
             // Initialize sound effect players
             shootSoundPlayer = new AudioPlayer("src/audio/Shoot.wav");
             explosionSoundPlayer = new AudioPlayer("src/audio/InvaderDown.wav");
+            
+            // Initialize background music
+            backgroundMusicPlayer = new AudioPlayer("src/audio/scene2.wav");
         } catch (Exception ex) {
             System.err.println("Error initializing sound effects.");
             ex.printStackTrace();
@@ -97,6 +103,11 @@ public class Scene2 extends JPanel {
         explosions = new ArrayList<>();
         shots = new ArrayList<>();
         player = new Player();
+        
+        // Start background music
+        if (backgroundMusicPlayer != null) {
+            backgroundMusicPlayer.play();
+        }
     }
 
     private void drawAliens(Graphics g) {
@@ -256,9 +267,17 @@ public class Scene2 extends JPanel {
             }
         }
 
-        if (deaths == 16) { // Adjusted for Scene2
+        if (deaths == 10) { // Reduced target for Scene2
             inGame = false;
             timer.stop();
+            // Stop background music when scene completes
+            try {
+                if (backgroundMusicPlayer != null) {
+                    backgroundMusicPlayer.stop();
+                }
+            } catch (Exception ex) {
+                System.err.println("Error stopping background music.");
+            }
             message = "Scene 2 Complete!";
         }
 
@@ -329,33 +348,50 @@ public class Scene2 extends JPanel {
         }
         shots.removeAll(shotsToRemove);
 
-        // Update enemies
+        // Update enemies (regular movement)
         for (Enemy enemy : enemies) {
-            enemy.act();
+            enemy.act(); // This moves them down by 2 pixels
         }
 
-        // Update zigzag aliens
+        // Update zigzag aliens (they handle their own movement)
         for (ZigZagAlien zigzag : zigzagAliens) {
             zigzag.act();
         }
 
-        // Check if enemies reached ground
+        // Check if regular enemies reached ground
         for (Enemy enemy : enemies) {
             if (enemy.isVisible()) {
                 int y = enemy.getY();
                 if (y > GROUND - ALIEN_HEIGHT) {
                     inGame = false;
+                    // Stop background music on invasion
+                    try {
+                        if (backgroundMusicPlayer != null) {
+                            backgroundMusicPlayer.stop();
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Error stopping background music.");
+                    }
                     message = "Invasion!";
                 }
-                enemy.act(direction);
+                // Don't call enemy.act(direction) here as it's already called above
             }
         }
 
+        // Check if zigzag aliens reached ground
         for (ZigZagAlien zigzag : zigzagAliens) {
             if (zigzag.isVisible()) {
                 int y = zigzag.getY();
                 if (y > GROUND - ALIEN_HEIGHT) {
                     inGame = false;
+                    // Stop background music on invasion
+                    try {
+                        if (backgroundMusicPlayer != null) {
+                            backgroundMusicPlayer.stop();
+                        }
+                    } catch (Exception ex) {
+                        System.err.println("Error stopping background music.");
+                    }
                     message = "Invasion!";
                 }
             }
@@ -387,6 +423,14 @@ public class Scene2 extends JPanel {
                 player.setImage(ii.getImage());
                 player.setDying(true);
                 playExplosionSound();
+                // Stop background music when player dies
+                try {
+                    if (backgroundMusicPlayer != null) {
+                        backgroundMusicPlayer.stop();
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Error stopping background music.");
+                }
                 bomb.setDestroyed(true);
             }
 
@@ -400,7 +444,7 @@ public class Scene2 extends JPanel {
 
         // Handle bombs from zigzag aliens
         for (ZigZagAlien zigzag : zigzagAliens) {
-            int chance = randomizer.nextInt(20);
+            int chance = randomizer.nextInt(25); // Lower chance to drop bombs
             ZigZagAlien.Bomb bomb = zigzag.getBomb();
 
             if (chance == CHANCE && zigzag.isVisible() && bomb.isDestroyed()) {
@@ -424,6 +468,14 @@ public class Scene2 extends JPanel {
                 player.setImage(ii.getImage());
                 player.setDying(true);
                 playExplosionSound();
+                // Stop background music when player dies
+                try {
+                    if (backgroundMusicPlayer != null) {
+                        backgroundMusicPlayer.stop();
+                    }
+                } catch (Exception ex) {
+                    System.err.println("Error stopping background music.");
+                }
                 bomb.setDestroyed(true);
             }
 

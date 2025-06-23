@@ -8,9 +8,9 @@ public class ZigZagAlien extends Sprite {
     private Bomb bomb;
     private int zigzagDirection = 1; // 1 for right, -1 for left
     private int moveCounter = 0;
-    private static final int ZIGZAG_CHANGE_FREQUENCY = 30; // Change direction every 30 frames
-    private static final int HORIZONTAL_SPEED = 3;
-    private static final int VERTICAL_SPEED = 1;
+    private static final int ZIGZAG_CHANGE_FREQUENCY = 40; // Change direction every 40 frames
+    private static final int HORIZONTAL_SPEED = 2; // Reduced speed
+    private static final int VERTICAL_SPEED = 1; // Slower vertical movement
 
     public ZigZagAlien(int x, int y) {
         initZigZagAlien(x, y);
@@ -42,7 +42,7 @@ public class ZigZagAlien extends Sprite {
         // Move horizontally in zigzag pattern
         this.x += zigzagDirection * HORIZONTAL_SPEED;
 
-        // Move vertically downward
+        // Move vertically downward (slower than regular enemies)
         this.y += VERTICAL_SPEED;
 
         // Keep alien within screen bounds horizontally
@@ -54,8 +54,9 @@ public class ZigZagAlien extends Sprite {
             zigzagDirection = -1; // Force left direction
         }
 
-        // Update bomb position
+        // Update bomb position to follow the alien
         bomb.setX(this.x);
+        bomb.setY(this.y);
     }
 
     public Bomb getBomb() {
