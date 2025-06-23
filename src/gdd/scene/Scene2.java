@@ -102,7 +102,7 @@ public class Scene2 extends JPanel {
             explosionSoundPlayer = new AudioPlayer("src/audio/InvaderDown.wav");
             
             // Initialize background music
-            backgroundMusicPlayer = new AudioPlayer("src/audio/scene2.wav");
+            backgroundMusicPlayer = new AudioPlayer("src/audio/MyScene2.wav");
             System.out.println("Audio initialized successfully");
         } catch (Exception ex) {
             System.err.println("Error initializing sound effects: " + ex.getMessage());
