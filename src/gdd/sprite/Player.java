@@ -9,6 +9,9 @@ public class Player extends Sprite {
     private static final int START_X = 270;
     private static final int START_Y = 540;
     private int width;
+    
+    // Increased movement speed from 2 to 4 for faster movement
+    private static final int MOVEMENT_SPEED = 10;
 
     public Player() {
         initPlayer();
@@ -25,17 +28,22 @@ public class Player extends Sprite {
 
         setX(START_X);
         setY(START_Y);
+        
+        // Set width for boundary checking
+        this.width = ii.getIconWidth() * SCALE_FACTOR;
     }
 
     public void act() {
         x += dx;
 
+        // Left boundary check
         if (x <= 2) {
             x = 2;
         }
 
-        if (x >= BOARD_WIDTH - 2 * width) {
-            x = BOARD_WIDTH - 2 * width;
+        // Right boundary check - use actual image width
+        if (x >= BOARD_WIDTH - width - 2) {
+            x = BOARD_WIDTH - width - 2;
         }
     }
 
@@ -43,23 +51,24 @@ public class Player extends Sprite {
         int key = e.getKeyCode();
 
         if (key == KeyEvent.VK_LEFT) {
-            dx = -2;
+            dx = -MOVEMENT_SPEED; // Changed from -2 to -MOVEMENT_SPEED
         }
 
         if (key == KeyEvent.VK_RIGHT) {
-            dx = 2;
+            dx = MOVEMENT_SPEED; // Changed from 2 to MOVEMENT_SPEED
         }
     }
 
     public void keyReleased(KeyEvent e) {
         int key = e.getKeyCode();
 
-        if (key == KeyEvent.VK_LEFT) {
-            dx = 0;
+        if (key == KeyEvent.VK_LEFT || key == KeyEvent.VK_RIGHT) {
+            dx = 0; // Stop movement when key is released
         }
-
-        if (key == KeyEvent.VK_RIGHT) {
-            dx = 0;
-        }
+    }
+    
+    // Getter for width if needed elsewhere
+    public int getWidth() {
+        return width;
     }
 }

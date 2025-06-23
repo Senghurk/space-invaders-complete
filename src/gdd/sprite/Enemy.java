@@ -8,12 +8,10 @@ public class Enemy extends Sprite {
     private Bomb bomb;
 
     public Enemy(int x, int y) {
-
         initEnemy(x, y);
     }
 
     private void initEnemy(int x, int y) {
-
         this.x = x;
         this.y = y;
 
@@ -28,17 +26,17 @@ public class Enemy extends Sprite {
         setImage(scaledImage);
     }
 
+    // This method is used in Scene1 for horizontal movement
     public void act(int direction) {
-
         this.x += direction;
     }
 
+    // This method is used for basic downward movement (Scene2)
     public void act() {
         this.y += 2;
     }
 
     public Bomb getBomb() {
-
         return bomb;
     }
 
@@ -47,12 +45,10 @@ public class Enemy extends Sprite {
         private boolean destroyed;
 
         public Bomb(int x, int y) {
-
             initBomb(x, y);
         }
 
         private void initBomb(int x, int y) {
-
             setDestroyed(true);
 
             this.x = x;
@@ -64,12 +60,10 @@ public class Enemy extends Sprite {
         }
 
         public void setDestroyed(boolean destroyed) {
-
             this.destroyed = destroyed;
         }
 
         public boolean isDestroyed() {
-
             return destroyed;
         }
     }
