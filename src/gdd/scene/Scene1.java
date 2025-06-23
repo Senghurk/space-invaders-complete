@@ -1,8 +1,9 @@
 package gdd.scene;
 
-import static gdd.Global.*;
-
+import gdd.AudioPlayer;
 import gdd.Game;
+import static gdd.Global.*;
+import gdd.SpawnDetails;
 import gdd.sprite.Enemy;
 import gdd.sprite.Explosion;
 import gdd.sprite.Player;
@@ -23,7 +24,6 @@ import java.util.Random;
 import javax.swing.ImageIcon;
 import javax.swing.JPanel;
 import javax.swing.Timer;
-import gdd.SpawnDetails;
 
 public class Scene1 extends JPanel {
 
@@ -31,7 +31,6 @@ public class Scene1 extends JPanel {
     private List<Explosion> explosions;
     private List<Shot> shots;
     private Player player;
-    // private Shot shot;
 
     private int direction = -1;
     private int deaths = 0;
@@ -48,6 +47,10 @@ public class Scene1 extends JPanel {
     private HashMap<Integer, SpawnDetails> spawnMap = new HashMap<>();
     protected int frame = 0;
 
+    // Audio players for sound effects
+    private AudioPlayer shootSoundPlayer;
+    private AudioPlayer explosionSoundPlayer;
+
     public Scene1(Game game) {
         this.game = game;
 
@@ -58,7 +61,6 @@ public class Scene1 extends JPanel {
     }
 
     public void start() {
-
         addKeyListener(new TAdapter());
         setFocusable(true);
         requestFocusInWindow();
@@ -67,63 +69,53 @@ public class Scene1 extends JPanel {
         timer = new Timer(DELAY, new GameCycle());
         timer.start();
 
+        initAudio();
         gameInit();
+    }
 
+    private void initAudio() {
+        try {
+            // Initialize sound effect players
+            shootSoundPlayer = new AudioPlayer("src/audio/Shoot.wav");
+            explosionSoundPlayer = new AudioPlayer("src/audio/InvaderDown.wav");
+        } catch (Exception ex) {
+            System.err.println("Error initializing sound effects.");
+            ex.printStackTrace();
+        }
     }
 
     private void gameInit() {
-
         enemies = new ArrayList<>();
         explosions = new ArrayList<>();
         shots = new ArrayList<>();
-
-        // for (int i = 0; i < 4; i++) {
-        // for (int j = 0; j < 6; j++) {
-
-        // var enemy = new Enemy(ALIEN_INIT_X + (ALIEN_WIDTH + ALIEN_GAP) * j,
-        // ALIEN_INIT_Y + (ALIEN_HEIGHT + ALIEN_GAP) * i);
-        // enemies.add(enemy);
-        // }
-        // }
-
         player = new Player();
-        // shot = new Shot();
     }
 
     private void drawAliens(Graphics g) {
-
         for (Enemy enemy : enemies) {
-
             if (enemy.isVisible()) {
-
                 g.drawImage(enemy.getImage(), enemy.getX(), enemy.getY(), this);
             }
 
             if (enemy.isDying()) {
-
                 enemy.die();
             }
         }
     }
 
     private void drawPlayer(Graphics g) {
-
         if (player.isVisible()) {
-
             g.drawImage(player.getImage(), player.getX(), player.getY(), this);
         }
 
         if (player.isDying()) {
-
             player.die();
             inGame = false;
         }
     }
 
     private void drawShot(Graphics g) {
-
         for (Shot shot : shots) {
-
             if (shot.isVisible()) {
                 g.drawImage(shot.getImage(), shot.getX(), shot.getY(), this);
             }
@@ -131,24 +123,18 @@ public class Scene1 extends JPanel {
     }
 
     private void drawBombing(Graphics g) {
-
         for (Enemy e : enemies) {
-
             Enemy.Bomb b = e.getBomb();
-
             if (!b.isDestroyed()) {
-
                 g.drawImage(b.getImage(), b.getX(), b.getY(), this);
             }
         }
     }
 
     private void drawExplosions(Graphics g) {
-
         List<Explosion> toRemove = new ArrayList<>();
 
         for (Explosion explosion : explosions) {
-
             if (explosion.isVisible()) {
                 g.drawImage(explosion.getImage(), explosion.getX(), explosion.getY(), this);
                 explosion.visibleCountDown();
@@ -164,12 +150,10 @@ public class Scene1 extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-
         doDrawing(g);
     }
 
     private void doDrawing(Graphics g) {
-
         g.setColor(Color.black);
         g.fillRect(0, 0, d.width, d.height);
 
@@ -180,22 +164,16 @@ public class Scene1 extends JPanel {
         g.setColor(Color.green);
 
         if (inGame) {
-
-            g.drawLine(0, GROUND,
-                    BOARD_WIDTH, GROUND);
-
+            g.drawLine(0, GROUND, BOARD_WIDTH, GROUND);
             drawExplosions(g);
             drawAliens(g);
             drawPlayer(g);
             drawShot(g);
             drawBombing(g);
-
         } else {
-
             if (timer.isRunning()) {
                 timer.stop();
             }
-
             gameOver(g);
         }
 
@@ -203,7 +181,6 @@ public class Scene1 extends JPanel {
     }
 
     private void gameOver(Graphics g) {
-
         g.setColor(Color.black);
         g.fillRect(0, 0, BOARD_WIDTH, BOARD_HEIGHT);
 
@@ -221,8 +198,27 @@ public class Scene1 extends JPanel {
                 BOARD_WIDTH / 2);
     }
 
-    private void update() {
+    private void playShootSound() {
+        try {
+            if (shootSoundPlayer != null) {
+                shootSoundPlayer.restart();
+            }
+        } catch (Exception ex) {
+            System.err.println("Error playing shoot sound.");
+        }
+    }
 
+    private void playExplosionSound() {
+        try {
+            if (explosionSoundPlayer != null) {
+                explosionSoundPlayer.restart();
+            }
+        } catch (Exception ex) {
+            System.err.println("Error playing explosion sound.");
+        }
+    }
+
+    private void update() {
         // Any new spawn?
         SpawnDetails sd = spawnMap.get(frame);
         if (sd != null) {
@@ -243,7 +239,6 @@ public class Scene1 extends JPanel {
         // shot
         List<Shot> shotsToRemove = new ArrayList<>();
         for (Shot shot : shots) {
-
             if (shot.isVisible()) {
                 int shotX = shot.getX();
                 int shotY = shot.getY();
@@ -263,6 +258,7 @@ public class Scene1 extends JPanel {
                         enemy.setImage(ii.getImage());
                         enemy.setDying(true);
                         explosions.add(new Explosion(enemyX, enemyY));
+                        playExplosionSound(); // Play explosion sound
                         deaths++;
                         shot.die();
                         shotsToRemove.add(shot);
@@ -270,7 +266,6 @@ public class Scene1 extends JPanel {
                 }
 
                 int y = shot.getY();
-                // y -= 4;
                 y -= 20;
 
                 if (y < 0) {
@@ -286,34 +281,10 @@ public class Scene1 extends JPanel {
         for (Enemy enemy : enemies) {
             enemy.act();
         }
-        
+
         // enemies
-        // for (Enemy enemy : enemies) {
-
-        // int x = enemy.getX();
-
-        // if (x >= BOARD_WIDTH - BORDER_RIGHT && direction != -1) {
-
-        // direction = -1;
-
-        // for (Enemy e2 : enemies) {
-        // e2.setY(e2.getY() + GO_DOWN);
-        // }
-        // }
-
-        // if (x <= BORDER_LEFT && direction != 1) {
-
-        // direction = 1;
-
-        // for (Enemy e : enemies) {
-        // e.setY(e.getY() + GO_DOWN);
-        // }
-        // }
-        // }
-
         for (Enemy enemy : enemies) {
             if (enemy.isVisible()) {
-
                 int y = enemy.getY();
 
                 if (y > GROUND - ALIEN_HEIGHT) {
@@ -327,12 +298,10 @@ public class Scene1 extends JPanel {
 
         // bombs
         for (Enemy enemy : enemies) {
-
             int chance = randomizer.nextInt(15);
             Enemy.Bomb bomb = enemy.getBomb();
 
             if (chance == CHANCE && enemy.isVisible() && bomb.isDestroyed()) {
-
                 bomb.setDestroyed(false);
                 bomb.setX(enemy.getX());
                 bomb.setY(enemy.getY());
@@ -352,6 +321,7 @@ public class Scene1 extends JPanel {
                 var ii = new ImageIcon(IMG_EXPLOSION);
                 player.setImage(ii.getImage());
                 player.setDying(true);
+                playExplosionSound(); // Play explosion sound when player is hit
                 bomb.setDestroyed(true);
             }
 
@@ -371,7 +341,6 @@ public class Scene1 extends JPanel {
     }
 
     private class GameCycle implements ActionListener {
-
         @Override
         public void actionPerformed(ActionEvent e) {
             doGameCycle();
@@ -379,21 +348,17 @@ public class Scene1 extends JPanel {
     }
 
     private class TAdapter extends KeyAdapter {
-
         @Override
         public void keyReleased(KeyEvent e) {
-
             player.keyReleased(e);
         }
 
         @Override
         public void keyPressed(KeyEvent e) {
-
             player.keyPressed(e);
 
             int x = player.getX();
             int y = player.getY();
-
             int key = e.getKeyCode();
 
             if (key == KeyEvent.VK_SPACE && inGame) {
@@ -402,9 +367,9 @@ public class Scene1 extends JPanel {
                     // Create a new shot and add it to the list
                     Shot shot = new Shot(x, y);
                     shots.add(shot);
+                    playShootSound(); // Play shoot sound when firing
                 }
             }
-
         }
     }
 }
